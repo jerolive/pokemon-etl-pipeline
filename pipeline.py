@@ -1,8 +1,9 @@
 import requests
 import pandas as pd
 import numpy as np
+import sqlite3
 
-API_URL = "https://pokeapi.co/api/v2/pokemon?limit=151"
+API_URL = "https://pokeapi.co/api/v2/pokemon?limit=2000" # This fetches all pokemon, as there are currently less than 2000.
 
 
 # ========== EXTRACT ==========
@@ -73,7 +74,27 @@ if len(pokemon_details) > 0:
 
     bmi_df["bmi_class"] = pd.cut(bmi_df["bmi"], bins=classification_bins, labels=classification_labels, right=False)
 
-    print(bmi_df)
+    print("Success! The data has been transformed.")
+
+
+# ========== LOAD ==========
+
+    print("Connecting to database...")
+
+    connection = sqlite3.connect("pokemon_data.db")
+
+    bmi_df.to_sql(
+        name="pokemon_bmi",
+        con=connection,
+        if_exists="replace", # Overwrites table if it already exists
+        index=False          # Prevents writing dataframe row numbers as a db column
+    )
+
+    connection.close()
+
+    print("Success! The data has been loaded into pokemon_data.db.")
+
+    print("Pipeline Complete.")
 
 else:
-    print("Skipping Transform step: No data was extracted.")
+    print("Skipping Transform and Load steps: No data was extracted.")
